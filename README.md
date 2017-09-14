@@ -57,3 +57,4 @@ To start script it is required to call script with PHP from the command line.
 php -f entry_point.php
 ```
 According to the complexity of given problem, shell will remain in busy state certain amount of time.
+![Output after execution of script](/images/output_no_overlapping_ruleset.png?raw=true "Output after successful execution of script")
