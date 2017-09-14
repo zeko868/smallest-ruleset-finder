@@ -34,7 +34,7 @@ const criteriaValues =
 
 const criteriaNames = ['category', 'affordability', 'expert review', 'eligibility'];
 
-$assumedMinimum = 4;
+const assumedMinimum = 4;
 
 //require 'find_valid_ruleset_3dim_only.php';   // takes approximately 40 seconds on my local machine for current specified data
 require 'find_valid_ruleset.php';   // takes approximately 75 seconds on my local machine for current specified data
@@ -43,7 +43,7 @@ require 'find_valid_ruleset.php';   // takes approximately 75 seconds on my loca
 findShortestRuleset();
 
 if (empty($validRuleset)) {
-    echo "Looks like that there are no $assumedMinimum or less rules that could satisfy specified eligibility matrix without rule-overlapping";
+    echo "Looks like that there are no " . assumedMinimum . " or less rules that could satisfy specified eligibility matrix without rule-overlapping";
 }
 else {
     $widthsPerColumns = array();

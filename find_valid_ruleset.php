@@ -1,5 +1,5 @@
 <?php
-$currentMinimum = $assumedMinimum + 1;
+$currentMinimum = assumedMinimum + 1;
 $emptyMatchesMatrix = array();
 $resultValues = array();
 initializeValuesOfLastDimensionOfArrayToZeroesAndGetAllResultValues(eligibilitiesMatrix);
