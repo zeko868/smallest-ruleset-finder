@@ -1,5 +1,4 @@
-# smallest-ruleset-finder
-Smallest ruleset finder for specified decision table<br/>
+# Smallest ruleset finder for specified decision table<br/>
 Purpose of this application is to minimize number of rules without changing former logic while achieving that rules do not overlap.
 Let the following image represent initial decision table.<br/>
 ![Initial decision table](/images/decision_table.png?raw=true "Initial decision table which may not be optimized (number of rules can be minimized or rule-overlapping can be avoided)")
@@ -58,3 +57,6 @@ php -f entry_point.php
 ```
 According to the complexity of given problem, shell will remain in busy state certain amount of time.
 ![Output after execution of script](/images/output_no_overlapping_ruleset.png?raw=true "Output after successful execution of script")
+<br/>
+<br/>
+If specified decision table consists of exactly 3 criterias, in that case can be used ```find_valid_ruleset_3dim_only.php``` script. That script is not based on recursion as much as its counterpart is. Initial decition table is solved in 40 seconds on my local machine when that specific script is used and it takes about 75 seconds when its generic variant (```find_valid_ruleset.php```) is used.
