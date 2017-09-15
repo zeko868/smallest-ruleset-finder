@@ -112,42 +112,83 @@ function checkIfValueOfEachElementOfLastDimensionIsOne($array) {
     return true;
 }
 
-function findShortestRuleset($iOld = [], $jOld = [], $kOld = [], $valueOld = []) {
+define('numCritValI', count(criteriaValues[0]));
+define('numCritValJ', count(criteriaValues[1]));
+define('numCritValK', count(criteriaValues[2]));
+
+function findShortestRuleset($iOld = [], $jOld = [], $kOld = [], $valueOld = [], $iStart = 0, $jStart = 0, $kStart = 0) {
     global $currentMinimum;
-    foreach (array_merge(criteriaValues[0], array(notSpecifiedValue)) as $critValI) {
-        foreach (array_merge(criteriaValues[1], array(notSpecifiedValue)) as $critValJ) {
-            foreach (array_merge(criteriaValues[2], array(notSpecifiedValue)) as $critValK) {
+    global $valuesNumPerCriterias;
+    for ($i = $iStart; $i <= numCritValI; $i++) {
+        if ($i === numCritValI) {
+            $critValI = notSpecifiedValue;
+        }
+        else {
+            $critValI = criteriaValues[0][$i];
+        }
+        for ($j = $jStart; $j <= numCritValJ; $j++) {
+            if ($j === numCritValJ) {
+                $critValJ = notSpecifiedValue;
+            }
+            else {
+                $critValJ = criteriaValues[1][$j];
+            }
+            for ($k = $kStart; $k <= numCritValK; $k++) {
+                if ($k === numCritValK) {
+                    $critValK = notSpecifiedValue;
+                }
+                else {
+                    $critValK = criteriaValues[2][$k];
+                }
                 global $resultValues;
                 foreach ($resultValues as $value) {
-                    $iPos = array_keys($iOld, $critValI, true);
-                    $jPos = array_keys($jOld, $critValJ, true);
-                    $kPos = array_keys($kOld, $critValK, true);
-                    if (empty(array_intersect($iPos, $jPos, $kPos))) {
-                        $iNew = array_merge($iOld, array($critValI));
-                        $jNew = array_merge($jOld, array($critValJ));
-                        $kNew = array_merge($kOld, array($critValK));
-                        $valueNew = array_merge($valueOld, array($value));
-                        $rulesNum = count($iNew);
-                        if (checkIfNoOverlapping($iNew, $jNew, $kNew) && checkIfRulesMatch($iNew, $jNew, $kNew, $valueNew)) {
-                            if ($rulesNum < $currentMinimum) {
-                                $currentMinimum = $rulesNum;
-                                global $validRuleset;
-                                $validRuleset = array();
-                                for ($i = 0; $i < $rulesNum; $i++) {
-                                    $ithComponentValues = array($iNew[$i], $jNew[$i], $kNew[$i]);
-                                    $validRuleset[] = array($ithComponentValues, $valueNew[$i]);
-                                }
+                    $iNew = array_merge($iOld, array($critValI));
+                    $jNew = array_merge($jOld, array($critValJ));
+                    $kNew = array_merge($kOld, array($critValK));
+                    $valueNew = array_merge($valueOld, array($value));
+                    $rulesNum = count($iNew);
+                    if (checkIfNoOverlapping($iNew, $jNew, $kNew) && checkIfRulesMatch($iNew, $jNew, $kNew, $valueNew)) {
+                        if ($rulesNum < $currentMinimum) {
+                            $currentMinimum = $rulesNum;
+                            global $validRuleset;
+                            $validRuleset = array();
+                            for ($a = 0; $a < $rulesNum; $a++) {
+                                $athComponentValues = array($iNew[$a], $jNew[$a], $kNew[$a]);
+                                $validRuleset[] = array($athComponentValues, $valueNew[$a]);
                             }
                         }
-                        else {
-                            if (/*(empty($validRuleset) && $rulesNum+1 <= $currentMinimum) || */$rulesNum+1 < $currentMinimum) {
-                                findShortestRuleset($iNew, $jNew, $kNew, $valueNew);
+                    }
+                    else {
+                        if (/*(empty($validRuleset) && $rulesNum+1 <= $currentMinimum) || */$rulesNum+1 < $currentMinimum) {
+                            if ($k === numCritValK) {
+                                $newK = 0;
+                                if ($j === numCritValJ) {
+                                    $newJ = 0;
+                                    if ($i === numCritValI) {
+                                        return;
+                                    }
+                                    else {
+                                        $newI = $i + 1;
+                                    }
+                                }
+                                else {
+                                    $newJ = $j + 1;
+                                    $newI = $i;
+                                }
                             }
+                            else {
+                                $newK = $k + 1;
+                                $newJ = $j;
+                                $newI = $i;
+                            }
+                            findShortestRuleset($iNew, $jNew, $kNew, $valueNew, $newI, $newJ, $newK);
                         }
                     }
                 }
             }
+            $kStart = 0;
         }
+        $jStart = 0;
     }
 }
 

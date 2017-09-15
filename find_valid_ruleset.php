@@ -47,10 +47,7 @@ function incrementMatchMatrix(&$matrix, $possiblyUnstructuredRule) {
 function checkIfRulesMatch($criterias, $vals) {
     $numOfCriterias = count($criterias[0]);
     for ($i = 0; $i < $numOfCriterias; $i++) {
-        $rule = [];
-        foreach ($criterias as $criteriaComponent) {
-            $rule[] = $criteriaComponent[$i];
-        }
+        $rule = array_column($criterias, $i);
         $value = $vals[$i];
         if (checkIfRuleMatches($rule, $value) === false) {
             return false;
@@ -87,10 +84,7 @@ function checkIfNoOverlapping($criterias) {
     $matches = $emptyMatchesMatrix;
     $numOfCriterias = count($criterias[0]);
     for ($i = 0; $i < $numOfCriterias; $i++) {
-        $rule = [];
-        foreach ($criterias as $criteriaComponent) {
-            $rule[] = $criteriaComponent[$i];
-        }
+        $rule = array_column($criterias, $i);
         incrementMatchMatrix($matches, $rule);
     }
     return checkIfValueOfEachElementOfLastDimensionIsOne($matches);
@@ -112,56 +106,81 @@ function checkIfValueOfEachElementOfLastDimensionIsOne($array) {
     return true;
 }
 
-function findShortestRuleset($oldComponentValues = [], $oldValues = [], $componentValues = []) {
+function getCoordinatesOfNextNode($nodeCoords) {
+    $coordsOfNextNode = array();
+    $incrementCoordinate = true;
+    for ($i = count($nodeCoords) - 1; $i >= 0; $i--) {
+        if ($incrementCoordinate) {
+            if ($nodeCoords[$i] === notSpecifiedValue) {
+                if ($i === 0) {
+                    return null;                    
+                }
+                else {
+                    array_unshift($coordsOfNextNode, 0);
+                }
+            }
+            else {
+                $positionOfCurrentCoordinate = array_search($nodeCoords[$i], criteriaValues[$i], true);
+                array_unshift($coordsOfNextNode, $positionOfCurrentCoordinate + 1);
+                $incrementCoordinate = false;
+            }
+        }
+        else {
+            $positionOfCurrentCoordinate = array_search($nodeCoords[$i], criteriaValues[$i], true);
+            array_unshift($coordsOfNextNode, $positionOfCurrentCoordinate);
+        }
+    }
+    return $coordsOfNextNode;
+}
+
+function findShortestRuleset($oldComponentValues = [], $oldValues = [], $componentValues = [], $startingPoint = []) {
     $currentCriteriaIndex = count($componentValues);
-    foreach (array_merge(criteriaValues[$currentCriteriaIndex], array(notSpecifiedValue)) as $critVal) {
+    if ($startingPoint === null) {
+        return;
+    }
+    else if (empty($startingPoint)) {
+        $pruning = false;
+        $startingCoord = 0;
+    }
+    else {
+        $pruning = true;
+        $startingCoord = $startingPoint[$currentCriteriaIndex];
+    }
+    foreach (array_slice(array_merge(criteriaValues[$currentCriteriaIndex], array(notSpecifiedValue)), $startingCoord) as $critVal) {
         if ($currentCriteriaIndex+1 < numOfRuleComponents) {
-            findShortestRuleset($oldComponentValues, $oldValues, array_merge($componentValues, array($critVal)));
+            if ($pruning) {
+                findShortestRuleset($oldComponentValues, $oldValues, array_merge($componentValues, array($critVal)), $startingPoint);
+                $pruning = false;
+            }
+            else {
+                findShortestRuleset($oldComponentValues, $oldValues, array_merge($componentValues, array($critVal)));
+            }
         }
         else {
             global $resultValues;
+            global $currentMinimum;
             foreach ($resultValues as $value) {
                 $numOfCriterias = count($oldValues);
-                $foundIndices = array();
-                for ($i = 0; $i < numOfRuleComponents - 1; $i++) {
-                    if (!empty($oldComponentValues[$i])) {
-                        $foundIndices[] = array_keys($oldComponentValues[$i], $componentValues[$i], true);
+                $newComponentValues = $oldComponentValues;
+                for ($i = 0; $i < numOfRuleComponents-1; $i++) {
+                    $newComponentValues[$i][] = $componentValues[$i];
+                }
+                $newComponentValues[$i][] = $critVal;
+                $newValues = array_merge($oldValues, array($value));
+                $rulesNum = count($newValues);
+                if (checkIfNoOverlapping($newComponentValues) && checkIfRulesMatch($newComponentValues, $newValues)) {
+                    $currentMinimum = $rulesNum;
+                    global $validRuleset;
+                    $validRuleset = array();
+                    for ($i = 0; $i < $rulesNum; $i++) {
+                        $ithComponentValues = array_column($newComponentValues, $i);
+                        $validRuleset[] = array($ithComponentValues, $newValues[$i]);
                     }
-                }
-                if (!empty($oldComponentValues[$i])) {
-                    $foundIndices[] = array_keys($oldComponentValues[$i], $critVal, true);
-                }
-                if (empty($foundIndices)) {
-                    $intersect = array();
                 }
                 else {
-                    $intersect = call_user_func_array('array_intersect', $foundIndices);
-                }
-                if (empty($intersect)) {
-                    $newComponentValues = $oldComponentValues;
-                    for ($i = 0; $i < numOfRuleComponents-1; $i++) {
-                        $newComponentValues[$i][] = $componentValues[$i];
-                    }
-                    $newComponentValues[$i][] = $critVal;
-                    $newValues = array_merge($oldValues, array($value));
-                    $rulesNum = count($newValues);
-                    global $currentMinimum;
-                    if (checkIfNoOverlapping($newComponentValues) && checkIfRulesMatch($newComponentValues, $newValues)) {
-                        $currentMinimum = $rulesNum;
-                        global $validRuleset;
-                        $validRuleset = array();
-                        for ($i = 0; $i < $rulesNum; $i++) {
-                            $ithComponentValues = array();
-                            foreach ($newComponentValues as $componentValue) {
-                                $ithComponentValues[] = $componentValue[$i];
-                            }
-                            $validRuleset[] = array($ithComponentValues, $newValues[$i]);
-                        }
-                    }
-                    else {
-                        if (/*(empty($validRuleset) && $rulesNum+1 <= $currentMinimum) || */$rulesNum+1 < $currentMinimum) {
-                            findShortestRuleset($newComponentValues, $newValues);
-                        }
+                    if (/*(empty($validRuleset) && $rulesNum+1 <= $currentMinimum) || */$rulesNum+1 < $currentMinimum) {
+                        $continuingNode = getCoordinatesOfNextNode(array_column($newComponentValues, count($newValues)-1));
+                        findShortestRuleset($newComponentValues, $newValues, [], $continuingNode);
                     }
                 }
             }

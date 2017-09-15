@@ -36,8 +36,8 @@ const criteriaNames = ['category', 'affordability', 'expert review', 'eligibilit
 
 const assumedMinimum = 4;
 
-//require 'find_valid_ruleset_3dim_only.php';   // takes approximately 40 seconds on my local machine for current specified data
-require 'find_valid_ruleset.php';   // takes approximately 75 seconds on my local machine for current specified data
+//require 'find_valid_ruleset_3dim_only.php';   // takes approximately 6 seconds on my local machine for current specified data
+require 'find_valid_ruleset.php';   // takes approximately 35 seconds on my local machine for current specified data
 
 
 findShortestRuleset();
